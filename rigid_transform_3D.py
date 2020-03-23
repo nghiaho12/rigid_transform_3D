@@ -31,6 +31,10 @@ def rigid_transform_3D(A, B):
     # dot is matrix multiplication for array
     H = Am * transpose(Bm)
 
+    # sanity check
+    if linalg.matrix_rank(H) < 3:
+        raise ValueError("rank of H = {}, expecting 3".format(linalg.matrix_rank(H)))
+
     # find rotation
     U, S, Vt = linalg.svd(H)
     R = Vt.T * U.T
