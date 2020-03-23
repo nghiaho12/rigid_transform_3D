@@ -29,7 +29,7 @@ def rigid_transform_3D(A, B):
     Bm = B - tile(centroid_B, (1, num_cols))
 
     # dot is matrix multiplication for array
-    H = Am * transpose(Bm)
+    H = Am.dot(transpose(Bm))
 
     # sanity check
     if linalg.matrix_rank(H) < 3:
