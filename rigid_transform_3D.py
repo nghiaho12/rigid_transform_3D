@@ -28,12 +28,11 @@ def rigid_transform_3D(A, B):
     Am = A - tile(centroid_A, (1, num_cols))
     Bm = B - tile(centroid_B, (1, num_cols))
 
-    # dot is matrix multiplication for array
-    H = Am.dot(transpose(Bm))
+    H = Am * transpose(Bm)
 
     # sanity check
-    if linalg.matrix_rank(H) < 3:
-        raise ValueError("rank of H = {}, expecting 3".format(linalg.matrix_rank(H)))
+    #if linalg.matrix_rank(H) < 3:
+    #    raise ValueError("rank of H = {}, expecting 3".format(linalg.matrix_rank(H)))
 
     # find rotation
     U, S, Vt = linalg.svd(H)

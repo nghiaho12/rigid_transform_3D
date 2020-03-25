@@ -31,9 +31,9 @@ function [R,t] = rigid_transform_3D(A, B)
     % calculate covariance matrix (is this the corrcet term?)
     H = Am * B';
 
-    if rank(H) < 3
-        error(sprintf("rank of H = %d, expecting 3", rank(H)))
-    end
+    %if rank(H) < 3
+    %    error(sprintf("rank of H = %d, expecting 3", rank(H)))
+    %end
 
     % find rotation
     [U,S,V] = svd(H);
