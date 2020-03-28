@@ -24,6 +24,11 @@ def rigid_transform_3D(A, B):
     centroid_A = mean(A, axis=1)
     centroid_B = mean(B, axis=1)
 
+    # ensure centroids are 3x1 (necessary when A or B are numpy arrays
+    # instead of numpy matrices
+    centroid_A = centroid_A.reshape(-1, 1)
+    centroid_B = centroid_B.reshape(-1, 1)
+
     # subtract mean
     Am = A - tile(centroid_A, (1, num_cols))
     Bm = B - tile(centroid_B, (1, num_cols))
