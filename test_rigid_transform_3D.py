@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from numpy import *
 from math import sqrt
 

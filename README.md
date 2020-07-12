@@ -6,4 +6,4 @@ Given two sets of 3D points and their correspondence the algorithm will return a
 
 For Matalb/Octave users have a look at test_rigid_transform_3D.m.
 
-For Python users have a look at rigid_transform_3D.py.
+For Python users have a look at test_rigid_transform_3D.py.
