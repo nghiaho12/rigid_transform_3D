@@ -28,8 +28,8 @@ function [R,t] = rigid_transform_3D(A, B)
     Am = A - repmat(centroid_A, 1, num_cols);
     Bm = B - repmat(centroid_B, 1, num_cols);
 
-    % calculate covariance matrix (is this the corrcet term?)
-    H = Am * B';
+    % calculate covariance matrix (is this the correct terminology?)
+    H = Am * Bm';
 
     %if rank(H) < 3
     %    error(sprintf("rank of H = %d, expecting 3", rank(H)))
