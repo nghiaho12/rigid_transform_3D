@@ -33,7 +33,7 @@ def rigid_transform_3D(A, B):
     Am = A - tile(centroid_A, (1, num_cols))
     Bm = B - tile(centroid_B, (1, num_cols))
 
-    H = Am * transpose(Bm)
+    H = matmul(Am, transpose(Bm))
 
     # sanity check
     #if linalg.matrix_rank(H) < 3:
