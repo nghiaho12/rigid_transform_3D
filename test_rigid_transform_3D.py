@@ -16,7 +16,7 @@ R = U@Vt
 # remove reflection
 if np.linalg.det(R) < 0:
    Vt[2,:] *= -1
-   R = U*Vt
+   R = U@Vt
 
 # number of points
 n = 10
@@ -34,7 +34,7 @@ B2 = (ret_R@A) + ret_t
 err = B2 - B
 err = err * err
 err = np.sum(err)
-rmse = np.sqrt(err/n);
+rmse = np.sqrt(err/n)
 
 print("Points A")
 print(A)
@@ -61,6 +61,6 @@ print("")
 print("RMSE:", rmse)
 
 if rmse < 1e-5:
-    print("Everything looks good!\n");
+    print("Everything looks good!")
 else:
-    print("Hmm something doesn't look right ...\n");
+    print("Hmm something doesn't look right ...")
