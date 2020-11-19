@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import numpy as np
-from math import sqrt
 
 # Input: expects 3xN matrix of points
 # Returns R,t
@@ -47,6 +46,6 @@ def rigid_transform_3D(A, B):
         Vt[2,:] *= -1
         R = Vt.T @ U.T
 
-    t = -R@centroid_A + centroid_B
+    t = -R @ centroid_A + centroid_B
 
     return R, t
