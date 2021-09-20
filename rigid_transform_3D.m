@@ -1,22 +1,20 @@
-% This function finds the optimal Rigid/Euclidean transform in 3D space
-% It expects as input a 3xN matrix of 3D points.
-% It returns R, t
 
-% expects row data
 function [R,t] = rigid_transform_3D(A, B)
-    if nargin != 2
-	    error("Missing parameters");
-    end
+    
+    % This function finds the optimal Rigid/Euclidean transform in 3D space
+    % It expects as input a 3xN matrix of 3D points.
+    % It returns R, t
 
-    assert(size(A) == size(B));
+    narginchk(2,2);
+    assert(all(size(A) == size(B)));
 
     [num_rows, num_cols] = size(A);
-    if num_rows != 3
+    if num_rows ~= 3
         error("matrix A is not 3xN, it is %dx%d", num_rows, num_cols)
     end
 
     [num_rows, num_cols] = size(B);
-    if num_rows != 3
+    if num_rows ~= 3
         error("matrix B is not 3xN, it is %dx%d", num_rows, num_cols)
     end
 
@@ -41,7 +39,7 @@ function [R,t] = rigid_transform_3D(A, B)
 
     if det(R) < 0
         printf("det(R) < R, reflection detected!, correcting for it ...\n");
-        V(:,3) *= -1;
+        V(:,3) = V(:,3) * -1;
         R = V*U';
     end
 
