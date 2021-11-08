@@ -3,7 +3,7 @@ R = orth(rand(3,3)); % random rotation matrix
 
 if det(R) < 0
     [U,S,V] = svd(R);
-    V(:,3) *= -1;
+    V(:,3) = - V(:,3);
     R = V*U';
 end
 
@@ -29,28 +29,28 @@ err = err .* err;
 err = sum(err(:));
 rmse = sqrt(err/n);
 
-printf("Points A\n")
+fprintf("Points A\n")
 A
 
-printf("Points B\n")
+fprintf("Points B\n")
 B
 
-printf("Ground truth rotation\n")
+fprintf("Ground truth rotation\n")
 R
 
-printf("Recovered rotation\n")
+fprintf("Recovered rotation\n")
 ret_R
 
-printf("Ground truth translation\n")
+fprintf("Ground truth translation\n")
 t
 
-printf("Recovered translation\n")
+fprintf("Recovered translation\n")
 ret_t
 
-printf("RMSE: %f\n", rmse);
+fprintf("RMSE: %f\n", rmse);
 
 if rmse < 1e-5
-    printf("Everything looks good!\n");
+    fprintf("Everything looks good!\n");
 else
-    printf("Hmm something doesn't look right ...\n");
+    fprintf("Hmm something doesn't look right ...\n");
 end
