@@ -1,66 +1,85 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import unittest
+from scipy.spatial.transform import Rotation
 from rigid_transform_3D import rigid_transform_3D
 
-# Test with random data
 
-# Random rotation and translation
-R = np.random.rand(3,3)
-t = np.random.rand(3,1)
+def random_points(n=100):
+    return np.random.rand(n, 3)
 
-# make R a proper rotation matrix, force orthonormal
-U, S, Vt = np.linalg.svd(R)
-R = U@Vt
 
-# remove reflection
-if np.linalg.det(R) < 0:
-   Vt[2,:] *= -1
-   R = U@Vt
+def random_rotation():
+    R = Rotation.from_rotvec(np.random.rand(3)).as_matrix()
 
-# number of points
-n = 10
+    # remove reflection
+    # https://en.wikipedia.org/wiki/Kabsch_algorithm
+    if np.linalg.det(R) < 0:
+        U, _, Vt = np.linalg.svd(R)
+        S = np.diag([1, 1, -1])
+        R = U @ S @ Vt
 
-A = np.random.rand(3, n)
-B = R@A + t
+    return R
 
-# Recover R and t
-ret_R, ret_t = rigid_transform_3D(A, B)
 
-# Compare the recovered R and t with the original
-B2 = (ret_R@A) + ret_t
+def random_translation():
+    return np.random.rand(3, 1)
 
-# Find the root mean squared error
-err = B2 - B
-err = err * err
-err = np.sum(err)
-rmse = np.sqrt(err/n)
 
-print("Points A")
-print(A)
-print("")
+class Test(unittest.TestCase):
+    def test_bad_input(self):
+        src_pts = random_points(100)
+        dst_pts = random_points(50)
 
-print("Points B")
-print(B)
-print("")
+        with self.assertRaises(AssertionError):
+            rigid_transform_3D(src_pts, dst_pts)
 
-print("Ground truth rotation")
-print(R)
+    def test_Nx3(self):
+        pts = random_points(100)
+        R, t = rigid_transform_3D(pts, pts)
 
-print("Recovered rotation")
-print(ret_R)
-print("")
+        self.assertAlmostEqual(np.sum((R - np.eye(3)) ** 2), 0.0)
+        self.assertAlmostEqual(np.sum(t**2), 0.0)
 
-print("Ground truth translation")
-print(t)
+    def test_3xN(self):
+        pts = random_points(100).T
+        R, t = rigid_transform_3D(pts, pts)
 
-print("Recovered translation")
-print(ret_t)
-print("")
+        self.assertAlmostEqual(np.sum((R - np.eye(3)) ** 2), 0.0)
+        self.assertAlmostEqual(np.sum(t**2), 0.0)
 
-print("RMSE:", rmse)
+    def test(self):
+        R = random_rotation()
+        t = random_translation()
+        src = random_points()
+        dst = R @ src.T + t
 
-if rmse < 1e-5:
-    print("Everything looks good!")
-else:
-    print("Hmm something doesn't look right ...")
+        # Recover R and t
+        ret_R, ret_t = rigid_transform_3D(src, dst.T)
+        dst2 = ret_R @ src.T + ret_t
+
+        rmse = np.sqrt(np.mean(((dst - dst2) ** 2).flatten()))
+
+        print("Ground truth rotation")
+        print(R)
+
+        print("Recovered rotation")
+        print(ret_R)
+        print("")
+
+        print("Ground truth translation: ", t.flatten())
+        print("Recovered translation: ", ret_t.flatten())
+        print("")
+        print("RMSE:", rmse)
+
+        if rmse < 1e-5:
+            print("Everything looks good!")
+        else:
+            print("Hmm something doesn't look right ...")
+
+        self.assertAlmostEqual(rmse, 0.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

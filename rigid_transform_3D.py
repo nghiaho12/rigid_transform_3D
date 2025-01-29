@@ -1,51 +1,70 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import numpy as np
 
-# Input: expects 3xN matrix of points
-# Returns R,t
-# R = 3x3 rotation matrix
-# t = 3x1 column vector
 
-def rigid_transform_3D(A, B):
-    assert A.shape == B.shape
+def rigid_transform_3D(src_pts, dst_pts):
+    """Calculates the optimal rigid transform from src_pts to dst_pts.
 
-    num_rows, num_cols = A.shape
-    if num_rows != 3:
-        raise Exception(f"matrix A is not 3xN, it is {num_rows}x{num_cols}")
+    Parameters
+    ------
+    src_pts: 3xN or Nx3 matrix
+    dst_pts: 3xN or Nx3 matrix
 
-    num_rows, num_cols = B.shape
-    if num_rows != 3:
-        raise Exception(f"matrix B is not 3xN, it is {num_rows}x{num_cols}")
+    NOTE: If src_pts and dst_pts are 3x3 matrices then points are assumed to be row major.
 
-    # find mean column wise
-    centroid_A = np.mean(A, axis=1)
-    centroid_B = np.mean(B, axis=1)
+    Returns
+    -------
+    R = 3x3 rotation matrix
+    t = 3x1 column vector
+    """
 
-    # ensure centroids are 3x1
-    centroid_A = centroid_A.reshape(-1, 1)
-    centroid_B = centroid_B.reshape(-1, 1)
+    assert (
+        src_pts.shape == dst_pts.shape
+    ), f"src and dst points aren't the same shape {src_pts.shape=} {dst_pts.shape=}"
+    assert (
+        src_pts.shape[0] == 3 or dst_pts.shape[1] == 3
+    ), "Expect 3xN or Nx3 matrix of points"
+
+    # transpose to row major
+    if src_pts.shape[0] == 3:
+        src_pts = src_pts.T
+        dst_pts = dst_pts.T
+
+    # find mean/centroid
+    centroid_src = np.mean(src_pts, axis=0)
+    centroid_dst = np.mean(dst_pts, axis=0)
+
+    centroid_src = centroid_src.reshape(-1, 3)
+    centroid_dst = centroid_dst.reshape(-1, 3)
 
     # subtract mean
-    Am = A - centroid_A
-    Bm = B - centroid_B
+    # NOTE: doing src_pts -= centroid_src will modifiy input!
+    src_pts = src_pts - centroid_src
+    dst_pts = dst_pts - centroid_dst
 
-    H = Am @ np.transpose(Bm)
+    # this is similar to the cross-covariance matrix, except the outer mean is not calculated
+    # https://en.wikipedia.org/wiki/Cross-covariance_matrix
+    H = src_pts.T @ dst_pts
+
+    assert H.shape[0] == 3 and H.shape[1] == 3, "H is not a 3x3 matrix"
 
     # sanity check
-    #if linalg.matrix_rank(H) < 3:
-    #    raise ValueError("rank of H = {}, expecting 3".format(linalg.matrix_rank(H)))
+    rank = np.linalg.matrix_rank(H)
+    if rank < 3:
+        print(f"WARNING: rank of H = {rank}, expecting rank of 3 for a unique solution")
 
     # find rotation
-    U, S, Vt = np.linalg.svd(H)
+    U, _, Vt = np.linalg.svd(H)
     R = Vt.T @ U.T
 
     # special reflection case
+    # https://en.wikipedia.org/wiki/Kabsch_algorithm
     if np.linalg.det(R) < 0:
-        print("det(R) < R, reflection detected!, correcting for it ...")
-        Vt[2,:] *= -1
-        R = Vt.T @ U.T
+        print("det(R) < 1, reflection detected!, correcting for it ...")
+        S = np.diag([1, 1, -1])
+        R = Vt.T @ S @ U.T
 
-    t = -R @ centroid_A + centroid_B
+    t = -R @ centroid_src.T + centroid_dst.T
 
     return R, t

@@ -11,30 +11,16 @@ end
 t = rand(3,1);
 
 % Generate some random points
-n = 10; % number of points
-A = rand(3,n);
+src_pts = rand(100, 3);
 
 % Apply transform to get new dataset B
-B = R*A + repmat(t, 1, n);
+dst_pts = R*src_pts' + t;
 
 % Recover R and t
-[ret_R, ret_t] = rigid_transform_3D(A, B);
+[ret_R, ret_t] = rigid_transform_3D(src_pts, dst_pts');
 
-% Compare the recovered R and t with the original
-B2 = (ret_R*A) + repmat(ret_t, 1, n);
-
-% Find the root mean squared error
-err = B2 - B;
-err = err .* err;
-err = sum(err(:));
-rmse = sqrt(err/n);
-
-fprintf("Points A\n")
-A
-
-fprintf("Points B\n")
-B
-
+dst_pts2 = ret_R * src_pts' + ret_t;
+rmse = sqrt(mean((dst_pts - dst_pts2).^2, "all"));
 fprintf("Ground truth rotation\n")
 R
 
