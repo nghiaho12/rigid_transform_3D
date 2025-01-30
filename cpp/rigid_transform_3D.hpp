@@ -4,37 +4,39 @@
 struct RigidTransformResult {
     Eigen::MatrixXd R;
     Eigen::Vector3d t;
+    double scale = 1.0;
 };
 
-RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd dst_pts) {
+RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd dst_pts, bool calc_scale=false) {
     assert(src_pts.rows() == dst_pts.rows());
     assert(src_pts.cols() == dst_pts.cols());
-    assert(src_pts.rows() == 3 || src_pts.cols() == 3);
+    assert(src_pts.rows() == 3 || src_pts.cols() == 3); // invalid matrix
+    assert(std::min(src_pts.rows(), src_pts.cols()) >= 3); // not enough points
 
     // transpose to row major
     if (src_pts.rows() == 3) {
-        src_pts = src_pts.transpose();
-        dst_pts = dst_pts.transpose();
+        src_pts.transposeInPlace();
+        dst_pts.transposeInPlace();
     }
-    std::cout << "HERE\n";
 
     // find mean/centroid
-    Eigen::MatrixXd centroid_src(1, 3);
-    Eigen::MatrixXd centroid_dst(1, 3);
+    Eigen::Vector3d centroid_src;
+    Eigen::Vector3d centroid_dst;
 
     for (int i = 0; i < 3; i++) {
-        centroid_src(0, i) = src_pts.col(i).mean();
-        centroid_dst(0, i) = dst_pts.col(i).mean();
+        centroid_src(i) = src_pts.col(i).mean();
+        centroid_dst(i) = dst_pts.col(i).mean();
     }
 
-    for (int i = 0; i < src_pts.rows(); i++) {
-        src_pts.row(i) -= centroid_src.row(0);
-        dst_pts.row(i) -= centroid_dst.row(0);
+    for (int i = 0; i < 3; i++) {
+        src_pts.col(i).array() -= centroid_src(i);
+        dst_pts.col(i).array() -= centroid_dst(i);
     }
 
     Eigen::MatrixXd H = src_pts.transpose() * dst_pts;
+
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(H);
-    svd.compute(H, Eigen::ComputeThinV | Eigen::ComputeThinU);
+    svd.compute(H, Eigen::ComputeFullV | Eigen::ComputeFullU);
 
     Eigen::MatrixXd R = svd.matrixV() * svd.matrixU().transpose();
 
@@ -47,7 +49,13 @@ RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd
         R = svd.matrixV() * S * svd.matrixU().transpose();
     }
 
-    Eigen::Vector3d t = -R * centroid_src.transpose() + centroid_dst.transpose();
+    double scale = 1.0;
 
-    return {R, t};
+    if (calc_scale) {
+        scale = std::sqrt(dst_pts.array().square().sum() / src_pts.array().square().sum());
+    }
+
+    Eigen::Vector3d t = -scale * (R * centroid_src) + centroid_dst;
+
+    return {R, t, scale};
 }

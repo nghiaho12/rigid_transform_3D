@@ -27,7 +27,7 @@ def rigid_transform_3D(src_pts, dst_pts, calc_scale=False):
     -------
     R: 3x3 rotation matrix
     t: 3x1 column vector
-    scale: scalar, 1 if calc_scale=False
+    scale: scalar, scalar=1.0 if calc_scale=False
     """
 
     assert (
@@ -56,11 +56,6 @@ def rigid_transform_3D(src_pts, dst_pts, calc_scale=False):
     src_pts = src_pts - centroid_src
     dst_pts = dst_pts - centroid_dst
 
-    if calc_scale:
-        scale = np.sqrt(np.sum(dst_pts**2) / np.sum(src_pts**2))
-    else:
-        scale = 1.0
-
     # almost the cross-covariance matrix, except the outer mean is not calculated
     # https://en.wikipedia.org/wiki/Cross-covariance_matrix
     H = src_pts.T @ dst_pts
@@ -82,6 +77,11 @@ def rigid_transform_3D(src_pts, dst_pts, calc_scale=False):
         print("det(R) < 1, reflection detected!, correcting for it ...")
         S = np.diag([1, 1, -1])
         R = Vt.T @ S @ U.T
+
+    if calc_scale:
+        scale = np.sqrt(np.sum(dst_pts**2) / np.sum(src_pts**2))
+    else:
+        scale = 1.0
 
     t = -scale * R @ centroid_src.T + centroid_dst.T
 
