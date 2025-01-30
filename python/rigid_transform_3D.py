@@ -3,28 +3,41 @@
 import numpy as np
 
 
-def rigid_transform_3D(src_pts, dst_pts):
+def rigid_transform_3D(src_pts, dst_pts, calc_scale=False):
     """Calculates the optimal rigid transform from src_pts to dst_pts.
+
+    The returned transform minimizes the following least-squares problem
+        r = dst_pts - (R @ src_pts + t)
+        s = sum(r**2))
+
+    If calc_scale is True, the following residual is minimized instead
+        r = dst_pts - (scale * R @ src_pts + t)
+
+    where scale is a scalar.
 
     Parameters
     ------
     src_pts: 3xN or Nx3 matrix
     dst_pts: 3xN or Nx3 matrix
+    calc_scale: bool
 
     NOTE: If src_pts and dst_pts are 3x3 matrices then points are assumed to be row major.
 
     Returns
     -------
-    R = 3x3 rotation matrix
-    t = 3x1 column vector
+    R: 3x3 rotation matrix
+    t: 3x1 column vector
+    scale: scalar, 1 if calc_scale=False
     """
 
     assert (
         src_pts.shape == dst_pts.shape
-    ), f"src and dst points aren't the same shape {src_pts.shape=} {dst_pts.shape=}"
+    ), f"src and dst points aren't the same shape {src_pts.shape=} != {dst_pts.shape=}"
     assert (
         src_pts.shape[0] == 3 or dst_pts.shape[1] == 3
     ), "Expect 3xN or Nx3 matrix of points"
+
+    assert min(src_pts.shape) >= 3, "Not enough points, expect >= 3"
 
     # transpose to row major
     if src_pts.shape[0] == 3:
@@ -43,7 +56,12 @@ def rigid_transform_3D(src_pts, dst_pts):
     src_pts = src_pts - centroid_src
     dst_pts = dst_pts - centroid_dst
 
-    # this is similar to the cross-covariance matrix, except the outer mean is not calculated
+    if calc_scale:
+        scale = np.sqrt(np.sum(dst_pts**2) / np.sum(src_pts**2))
+    else:
+        scale = 1.0
+
+    # almost the cross-covariance matrix, except the outer mean is not calculated
     # https://en.wikipedia.org/wiki/Cross-covariance_matrix
     H = src_pts.T @ dst_pts
 
@@ -65,6 +83,6 @@ def rigid_transform_3D(src_pts, dst_pts):
         S = np.diag([1, 1, -1])
         R = Vt.T @ S @ U.T
 
-    t = -R @ centroid_src.T + centroid_dst.T
+    t = -scale * R @ centroid_src.T + centroid_dst.T
 
-    return R, t
+    return R, t, scale

@@ -21,6 +21,7 @@ dst_pts = R*src_pts' + t;
 
 dst_pts2 = ret_R * src_pts' + ret_t;
 rmse = sqrt(mean((dst_pts - dst_pts2).^2, "all"));
+
 fprintf("Ground truth rotation\n")
 R
 
