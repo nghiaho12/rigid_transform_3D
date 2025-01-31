@@ -2,117 +2,107 @@
 
 import numpy as np
 import unittest
-from scipy.spatial.transform import Rotation
-from rigid_transform_3D import rigid_transform_3D
+from rigid_transform import rigid_transform
+from example import random_points, random_rotation, random_translation, random_scale
 
-
-def random_points(n=100):
-    return np.random.rand(n, 3)
-
-
-def random_rotation():
-    R = Rotation.from_rotvec(np.random.rand(3)).as_matrix()
-
-    # remove reflection
-    # https://en.wikipedia.org/wiki/Kabsch_algorithm
-    if np.linalg.det(R) < 0:
-        U, _, Vt = np.linalg.svd(R)
-        S = np.diag([1, 1, -1])
-        R = U @ S @ Vt
-
-    return R
-
-
-def random_translation():
-    return np.random.rand(3, 1)
-
-def random_scale():
-    while True:
-        s = np.random.rand(1)*10
-        if abs(s) > 0.1:
-            return s.item()
 
 class Test(unittest.TestCase):
-    def test_with_scale(self):
-        R = random_rotation()
-        t = random_translation()
-        s = random_scale()
-        src = random_points()
-        dst = s * R @ src.T + t
+    def test_2d_points(self):
+        dim = 2
+        R = random_rotation(dim)
+        t = random_translation(dim)
+        scale = random_scale()
 
-        # Recover R and t
-        ret_R, ret_t, ret_s = rigid_transform_3D(src, dst.T, calc_scale=True)
-        dst2 = ret_s * ret_R @ src.T + ret_t
+        src = random_points(100, dim)
+        dst = scale * (src @ R.T) + t.T
 
-        rmse = np.sqrt(np.mean(((dst - dst2) ** 2).flatten()))
+        ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=True)
 
-        print("Ground truth rotation")
-        print(R)
+        self.assertTrue(np.allclose(R, ret_R))
+        self.assertTrue(np.allclose(t, ret_t))
+        self.assertAlmostEqual(scale, ret_scale)
 
-        print("Recovered rotation")
-        print(ret_R)
-        print("")
+    def test_3d_points(self):
+        dim = 3
+        R = random_rotation(dim)
+        t = random_translation(dim)
+        scale = random_scale()
 
-        print("Ground truth translation: ", t.flatten())
-        print("Recovered translation: ", ret_t.flatten())
-        print("")
-        print("Ground truth scale: ", s)
-        print("Recovered scale: ", ret_s)
-        print("")
-        print("RMSE:", rmse)
+        src = random_points(100, dim)
+        dst = scale * (src @ R.T) + t.T
 
-        if rmse < 1e-5:
-            print("Everything looks good!")
-        else:
-            print("Hmm something doesn't look right ...")
+        ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=True)
 
-        self.assertAlmostEqual(rmse, 0.0)
+        self.assertTrue(np.allclose(R, ret_R))
+        self.assertTrue(np.allclose(t, ret_t))
+        self.assertAlmostEqual(scale, ret_scale)
 
     def test_no_scale(self):
-        R = random_rotation()
-        t = random_translation()
-        src = random_points()
-        dst = R @ src.T + t
+        dim = 3
 
-        # Recover R and t
-        ret_R, ret_t, ret_s = rigid_transform_3D(src, dst.T, calc_scale=False)
-        dst2 = ret_s * ret_R @ src.T + ret_t
+        R = random_rotation(dim)
+        t = random_translation(dim)
 
-        rmse = np.sqrt(np.mean(((dst - dst2) ** 2).flatten()))
+        src = random_points(100, dim)
+        dst = (src @ R.T) + t.T
 
-        if rmse < 1e-5:
-            print("Everything looks good!")
-        else:
-            print("Hmm something doesn't look right ...")
+        ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=False)
 
-        self.assertAlmostEqual(rmse, 0.0)
+        self.assertTrue(np.allclose(R, ret_R))
+        self.assertTrue(np.allclose(t, ret_t))
+        self.assertAlmostEqual(ret_scale, 1.0)
 
-    def test_mismatch_input(self):
-        src_pts = random_points(100)
-        dst_pts = random_points(50)
+    def test_invalid_dim(self):
+        dim = 4
+        src = random_points(100, dim)
 
         with self.assertRaises(AssertionError):
-            rigid_transform_3D(src_pts, dst_pts)
+            rigid_transform(src, src, calc_scale=True)
 
-    def test_not_enough_pts(self):
-        pts = random_points(2)
+    def test_mismatch_size(self):
+        src = random_points(100, 2)
+        dst = random_points(100, 3)
 
         with self.assertRaises(AssertionError):
-            rigid_transform_3D(pts, pts)
+            rigid_transform(src, dst, calc_scale=True)
 
-    def test_Nx3(self):
-        pts = random_points(100)
-        R, t, _ = rigid_transform_3D(pts, pts)
+    def test_wrong_order(self):
+        src = random_points(3, 100)
 
-        self.assertAlmostEqual(np.sum((R - np.eye(3)) ** 2), 0.0)
-        self.assertAlmostEqual(np.sum(t**2), 0.0)
+        with self.assertRaises(AssertionError):
+            rigid_transform(src, src, calc_scale=True)
 
-    def test_3xN(self):
-        pts = random_points(100).T
-        R, t, _ = rigid_transform_3D(pts, pts)
+    def test_not_enough_points(self):
+        src = random_points(2, 3)
 
-        self.assertAlmostEqual(np.sum((R - np.eye(3)) ** 2), 0.0)
-        self.assertAlmostEqual(np.sum(t**2), 0.0)
+        with self.assertRaises(AssertionError):
+            rigid_transform(src, src, calc_scale=True)
+
+    def test_low_rank(self):
+        src = np.array([[0, 0, 0], [0, 0, 0], [1, 1, 1]])
+
+        with self.assertRaises(AssertionError):
+            rigid_transform(src, src, calc_scale=True)
+
+    def test_reflection(self):
+        src = np.array(
+            [
+                [0.04997603, 0.92769423],
+                [0.64045334, 0.5110098],
+                [0.80452329, 0.19618526],
+            ]
+        )
+
+        dst = np.array(
+            [
+                [0.44224556, 0.61291874],
+                [0.4559217, 0.17549108],
+                [0.57923716, 0.23585888],
+            ]
+        )
+
+        ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=False)
+        self.assertTrue(np.linalg.det(ret_R) == 1)
 
 
 if __name__ == "__main__":
