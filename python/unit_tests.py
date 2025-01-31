@@ -42,9 +42,10 @@ class Test(unittest.TestCase):
 
         R = random_rotation(dim)
         t = random_translation(dim)
+        scale = 10.0
 
         src = random_points(100, dim)
-        dst = (src @ R.T) + t.T
+        dst = scale * (src @ R.T) + t.T
 
         ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=False)
 
@@ -52,7 +53,7 @@ class Test(unittest.TestCase):
         self.assertTrue(np.allclose(t, ret_t))
         self.assertAlmostEqual(ret_scale, 1.0)
 
-    def test_invalid_dim(self):
+    def test_invalid_point_dim(self):
         dim = 4
         src = random_points(100, dim)
 
@@ -73,12 +74,13 @@ class Test(unittest.TestCase):
             rigid_transform(src, src, calc_scale=True)
 
     def test_not_enough_points(self):
-        src = random_points(2, 3)
+        dim = 3
+        src = random_points(2, dim)
 
         with self.assertRaises(AssertionError):
             rigid_transform(src, src, calc_scale=True)
 
-    def test_low_rank(self):
+    def test_low_rank_matrix(self):
         src = np.array([[0, 0, 0], [0, 0, 0], [1, 1, 1]])
 
         with self.assertRaises(AssertionError):

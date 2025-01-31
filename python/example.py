@@ -40,7 +40,7 @@ def random_scale():
 
 if __name__ == "__main__":
     for dim in [2, 3]:
-        print("=" * 80)
+        print("=" * 60)
         print(f"{dim}D points")
         print("")
 

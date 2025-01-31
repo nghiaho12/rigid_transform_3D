@@ -15,12 +15,10 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
     where scale is a scalar.
 
     Parameters
-    ------
+    ----------
     src_pts: matrix of points stored as rows (e.g. Nx3)
     dst_pts: matrix of points stored as rows (e.g. Nx3)
-    calc_scale: bool
-
-    NOTE: If src_pts and dst_pts are 3x3 matrices then points are assumed to be row major.
+    calc_scale: if True solve for scale
 
     Returns
     -------
@@ -37,7 +35,7 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
     ), f"src and dst points aren't the same shape {src_pts.shape=} != {dst_pts.shape=}"
     assert src_pts.shape[1] == dim, f"Expect Nx{dim} matrix of points"
 
-    assert min(src_pts.shape) >= dim, f"Not enough points, expect >= {dim}"
+    assert src_pts.shape[0] >= dim, f"Not enough points, expect >= {dim}"
 
     # find mean/centroid
     centroid_src = np.mean(src_pts, axis=0)
