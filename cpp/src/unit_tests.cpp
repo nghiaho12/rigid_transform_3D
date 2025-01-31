@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+
 #include "helper.hpp"
 #include "rigid_transform_3D.hpp"
 

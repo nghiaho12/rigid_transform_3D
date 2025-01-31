@@ -9,15 +9,15 @@ find_package(Eigen3 REQUIRED)
 find_package(Catch2 3 REQUIRED)
 
 add_executable(example
-    example.cpp
-    helper.hpp
-    rigid_transform_3D.hpp
+    src/example.cpp
+    src/helper.hpp
+    src/rigid_transform_3D.hpp
 )
 
 add_executable(unit_tests
-    unit_tests.cpp
-    helper.hpp
-    rigid_transform_3D.hpp
+    src/unit_tests.cpp
+    src/helper.hpp
+    src/rigid_transform_3D.hpp
 )
 
 target_link_libraries(example PRIVATE Eigen3::Eigen)

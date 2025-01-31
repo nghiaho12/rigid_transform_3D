@@ -18,9 +18,7 @@ Eigen::Matrix3d random_rotation() {
     return R.matrix();
 }
 
-Eigen::Vector3d random_translation() {
-    return Eigen::Vector3d::Random();
-}
+Eigen::Vector3d random_translation() { return Eigen::Vector3d::Random(); }
 
 double random_scale() {
     while (true) {
@@ -31,14 +29,16 @@ double random_scale() {
     }
 }
 
-Eigen::MatrixXd apply_transform(const Eigen::MatrixXd &pts, const Eigen::Matrix3d &R, const Eigen::Vector3d &t, double scale) {
+Eigen::MatrixXd apply_transform(const Eigen::MatrixXd &pts,
+                                const Eigen::Matrix3d &R,
+                                const Eigen::Vector3d &t,
+                                double scale) {
     // NOTE: pts is row major hence pts * R.transpose()
     Eigen::MatrixXd ret = scale * pts * R.transpose();
 
-    for (int i=0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
         ret.col(i).array() += t(i);
     }
 
     return ret;
 }
-

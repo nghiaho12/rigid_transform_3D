@@ -1,6 +1,6 @@
-#include <stdexcept>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/SVD>
+#include <stdexcept>
 
 struct RigidTransformResult {
     Eigen::MatrixXd R;
@@ -8,7 +8,7 @@ struct RigidTransformResult {
     double scale = 1.0;
 };
 
-RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd dst_pts, bool calc_scale=false) {
+RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd dst_pts, bool calc_scale = false) {
     if (src_pts.rows() != dst_pts.rows()) {
         throw std::invalid_argument("src_pts.rows() != dst_pts.rows()");
     }

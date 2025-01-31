@@ -1,0 +1,10 @@
+﻿---
+BasedOnStyle: Google
+AllowAllParametersOfDeclarationOnNextLine: 'false'
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+ColumnLimit: '120'
+ExperimentalAutoDetectBinPacking: 'false'
+IndentWidth: '4'
+
+...

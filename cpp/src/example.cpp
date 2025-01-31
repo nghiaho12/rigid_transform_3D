@@ -1,5 +1,7 @@
 #include <time.h>
+
 #include <iostream>
+
 #include "helper.hpp"
 #include "rigid_transform_3D.hpp"
 
