@@ -38,7 +38,7 @@ TEST_CASE("3d points") {
     REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
 }
 
-TEST_CASE("no scale") {
+TEST_CASE("calc_scale false") {
     int dim = 3;
     Eigen::MatrixXd src = random_points(100, dim);
     Eigen::MatrixXd R = random_rotation(dim);

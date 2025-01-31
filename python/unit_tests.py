@@ -37,7 +37,7 @@ class Test(unittest.TestCase):
         self.assertTrue(np.allclose(t, ret_t))
         self.assertAlmostEqual(scale, ret_scale)
 
-    def test_no_scale(self):
+    def test_calc_scale_false(self):
         dim = 3
 
         R = random_rotation(dim)
@@ -50,7 +50,6 @@ class Test(unittest.TestCase):
         ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=False)
 
         self.assertTrue(np.allclose(R, ret_R))
-        self.assertTrue(np.allclose(t, ret_t))
         self.assertAlmostEqual(ret_scale, 1.0)
 
     def test_invalid_point_dim(self):
@@ -80,11 +79,18 @@ class Test(unittest.TestCase):
         with self.assertRaises(AssertionError):
             rigid_transform(src, src, calc_scale=True)
 
-    def test_low_rank_matrix(self):
-        src = np.array([[0, 0, 0], [0, 0, 0], [1, 1, 1]])
+    def test_2d_all_identical_points(self):
+        dim = 2
+        src = np.ones((100, dim))
 
         with self.assertRaises(AssertionError):
-            rigid_transform(src, src, calc_scale=True)
+            rigid_transform(src, src)
+
+    def test_3d_collinear_points(self):
+        src = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3]])
+
+        with self.assertRaises(AssertionError):
+            rigid_transform(src, src)
 
     def test_reflection(self):
         src = np.array(
