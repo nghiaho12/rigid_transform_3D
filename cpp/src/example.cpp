@@ -33,5 +33,11 @@ int main() {
     std::cout << "Recovered scale: " << ret_scale << "\n\n";
     std::cout << "RMSE: " << rmse << "\n";
 
+    if (rmse < 1e-6) {
+        std::cout << "Everything looks good!\n";
+    } else {
+        std::cout << "Hmm something doesn't look right ...\n";
+    }
+
     return 0;
 }
