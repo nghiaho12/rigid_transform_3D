@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/SVD>
 
@@ -8,10 +9,21 @@ struct RigidTransformResult {
 };
 
 RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd dst_pts, bool calc_scale=false) {
-    assert(src_pts.rows() == dst_pts.rows());
-    assert(src_pts.cols() == dst_pts.cols());
-    assert(src_pts.rows() == 3 || src_pts.cols() == 3); // invalid matrix
-    assert(std::min(src_pts.rows(), src_pts.cols()) >= 3); // not enough points
+    if (src_pts.rows() != dst_pts.rows()) {
+        throw std::invalid_argument("src_pts.rows() != dst_pts.rows()");
+    }
+
+    if (src_pts.cols() != dst_pts.cols()) {
+        throw std::invalid_argument("src_pts.cols() != dst_pts.cols()");
+    }
+
+    if (src_pts.rows() != 3 && src_pts.cols() != 3) {
+        throw std::invalid_argument("points are not 3D");
+    }
+
+    if (std::min(src_pts.rows(), src_pts.cols()) < 3) {
+        throw std::invalid_argument("expect >= 3 points");
+    }
 
     // transpose to row major
     if (src_pts.rows() == 3) {
@@ -38,6 +50,10 @@ RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(H);
     svd.compute(H, Eigen::ComputeFullV | Eigen::ComputeFullU);
 
+    if (svd.rank() < 3) {
+        throw std::runtime_error("rank of H is < 3, no unique solution");
+    }
+
     Eigen::MatrixXd R = svd.matrixV() * svd.matrixU().transpose();
 
     if (R.determinant() < 0) {
@@ -52,10 +68,17 @@ RigidTransformResult rigid_transform_3D(Eigen::MatrixXd src_pts, Eigen::MatrixXd
     double scale = 1.0;
 
     if (calc_scale) {
-        scale = std::sqrt(dst_pts.array().square().sum() / src_pts.array().square().sum());
+        double num = dst_pts.array().square().sum();
+        double den = src_pts.array().square().sum();
+
+        if (den < 1e-6) {
+            throw std::runtime_error("division by zero when calculating scale");
+        }
+
+        scale = std::sqrt(num / den);
     }
 
-    Eigen::Vector3d t = -scale * (R * centroid_src) + centroid_dst;
+    Eigen::Vector3d t = -scale * R * centroid_src + centroid_dst;
 
     return {R, t, scale};
 }
