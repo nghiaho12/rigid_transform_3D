@@ -105,6 +105,8 @@ class Test(unittest.TestCase):
         src = random_points(num_pts, dim)
         dst = scale * (src @ R.T) + t.T
 
+        ret_R, ret_t, ret_scale = rigid_transform(src, dst, calc_scale=True)
+
         self.assertTrue(np.allclose(R, ret_R))
         self.assertTrue(np.allclose(t, ret_t))
         self.assertAlmostEqual(scale, ret_scale)

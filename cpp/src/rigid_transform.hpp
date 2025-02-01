@@ -1,5 +1,21 @@
 #include <eigen3/Eigen/Dense>
 
+class SrcDstSizeMismatchError : public std::logic_error {
+    using std::logic_error::logic_error; // inherit constructor
+};
+
+class InvalidPointDimError : public std::logic_error {
+    using std::logic_error::logic_error; // inherit constructor
+};
+
+class NotEnoughPointsError : public std::logic_error {
+    using std::logic_error::logic_error; // inherit constructor
+};
+
+class RankDeficiencyError : public std::logic_error {
+    using std::logic_error::logic_error; // inherit constructor
+};
+
 struct RigidTransformResult {
     Eigen::MatrixXd R;
     Eigen::VectorXd t;

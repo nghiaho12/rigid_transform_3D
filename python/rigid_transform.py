@@ -77,11 +77,11 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
 
     if dim == 2 and rank == 0:
         raise RankDeficiencyError(
-            f"Insufficent matrix rank. For 2D points expect rank >= 1 but got {rank}"
+            f"Insufficent matrix rank. For 2D points expect rank >= 1 but got {rank}. Maybe your points are all the same?"
         )
     elif dim == 3 and rank <= 1:
         raise RankDeficiencyError(
-            f"Insufficent matrix rank. For 3D points expect rank >= 2 but got {rank}"
+            f"Insufficent matrix rank. For 3D points expect rank >= 2 but got {rank}. Maybe your points are collinear?"
         )
 
     # find rotation

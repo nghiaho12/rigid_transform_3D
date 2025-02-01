@@ -3,25 +3,21 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/SVD>
 #include <format>
-#include <stdexcept>
 
 RigidTransformResult rigid_transform(const Eigen::MatrixXd &src_pts, const Eigen::MatrixXd &dst_pts, bool calc_scale) {
     int dim = static_cast<int>(src_pts.cols());
 
+    if (src_pts.rows() != dst_pts.rows() || src_pts.cols() != dst_pts.cols()) {
+        throw SrcDstSizeMismatchError(
+            std::format("src and dst points aren't the same matrix size {}x{} != {}x{}", src_pts.rows(), src_pts.cols(), dst_pts.rows(), dst_pts.cols()));
+    }
+
     if (!(dim == 2 || dim == 3)) {
-        throw std::invalid_argument("dim must be 2 or 3");
-    }
-
-    if (src_pts.rows() != dst_pts.rows()) {
-        throw std::invalid_argument("src_pts.rows() != dst_pts.rows()");
-    }
-
-    if (src_pts.cols() != dst_pts.cols()) {
-        throw std::invalid_argument("src_pts.cols() != dst_pts.cols()");
+        throw InvalidPointDimError(std::format("Points must be 2D or 3D, src_pts.shape[1] = {}", dim));
     }
 
     if (src_pts.rows() < dim) {
-        throw std::invalid_argument(std::format("Not enough points, expect >= {}", dim));
+        throw NotEnoughPointsError(std::format("Not enough points, expect >= {} points", dim));
     }
 
     // find mean/centroid
@@ -41,11 +37,13 @@ RigidTransformResult rigid_transform(const Eigen::MatrixXd &src_pts, const Eigen
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(H);
     svd.compute(H, Eigen::ComputeFullV | Eigen::ComputeFullU);
 
-    if (dim == 3 && svd.rank() < 2) {
-        // For 3D points the rank can be 2, all points lie on a plane
-        throw std::runtime_error(std::format("Insufficent matrix H rank, expect >= 2 but got {}, are the points collinear?", svd.rank()));
-    } else if (dim == 2 && svd.rank() < 2) {
-        throw std::runtime_error(std::format("Insufficent matrix H rank, expect 2 but got {}", svd.rank()));
+    auto rank = svd.rank();
+    if (dim == 2 && rank == 0) {
+        throw RankDeficiencyError(
+            std::format("Insufficent matrix rank. For 2D points expect rank >= 1 but got {}. Maybe your points are all the same?", rank));
+    } else if (dim == 3 && rank <= 1) {
+        throw RankDeficiencyError(
+            std::format("Insufficent matrix rank. For 3D points expect rank >= 2 but got {}. Maybe your points are collinear?", rank));
     }
 
     Eigen::MatrixXd R = svd.matrixV() * svd.matrixU().transpose();

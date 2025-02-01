@@ -6,9 +6,33 @@
 
 constexpr double TOL = 1e-6;
 
+TEST_CASE("2d not enough points") {
+    Eigen::MatrixXd src(1, 2);
+    REQUIRE_THROWS_AS(rigid_transform(src, src), NotEnoughPointsError);
+}
+
+TEST_CASE("2d min points") {
+    int dim = 2;
+    Eigen::MatrixXd R = random_rotation(dim);
+    Eigen::VectorXd t = random_translation(dim);
+    double scale = random_scale();
+
+    Eigen::MatrixXd src(2, dim);
+    src << 1, 0, -1, 0;
+    Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
+
+    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
+
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
+    REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
+}
+
 TEST_CASE("2d points") {
     int dim = 2;
-    Eigen::MatrixXd src = random_points(100, dim);
+    int num_pts = 100;
+
+    Eigen::MatrixXd src = random_points(num_pts, dim);
     Eigen::MatrixXd R = random_rotation(dim);
     Eigen::VectorXd t = random_translation(dim);
     double scale = random_scale();
@@ -17,14 +41,64 @@ TEST_CASE("2d points") {
 
     auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
 
-    REQUIRE(R.isApprox(ret_R));
-    REQUIRE(t.isApprox(ret_t));
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
+    REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
+}
+
+TEST_CASE("2d rank deficiency") {
+    Eigen::MatrixXd src = random_points(2, 2);
+    src << 1, 1, 1, 1;
+    REQUIRE_THROWS_AS(rigid_transform(src, src), RankDeficiencyError);
+}
+
+TEST_CASE("2d reflection") {
+    Eigen::Matrix2d R;
+    Eigen::Vector2d t;
+    Eigen::MatrixXd src(2, 2);
+
+    R << -0.63360525, 0.7736565, -0.7736565, -0.63360525;
+    t << -1, 1;
+    double scale = 1.23;
+
+    src << 1, 0, -1, 0;
+
+    Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
+
+    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
+
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
+    REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
+}
+
+TEST_CASE("3d not enough points") {
+    Eigen::MatrixXd src(2, 3);
+    REQUIRE_THROWS_AS(rigid_transform(src, src), NotEnoughPointsError);
+}
+
+TEST_CASE("3d min points") {
+    int dim = 3;
+    Eigen::MatrixXd R = random_rotation(dim);
+    Eigen::VectorXd t = random_translation(dim);
+    double scale = random_scale();
+
+    Eigen::MatrixXd src(3, dim);
+    src << 1, 0, 0, -1, 0, 0, 1, 1, 0;
+    Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
+
+    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
+
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
     REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
 }
 
 TEST_CASE("3d points") {
     int dim = 3;
-    Eigen::MatrixXd src = random_points(100, dim);
+    int num_pts = 100;
+
+    Eigen::MatrixXd src = random_points(num_pts, dim);
     Eigen::MatrixXd R = random_rotation(dim);
     Eigen::VectorXd t = random_translation(dim);
     double scale = random_scale();
@@ -33,91 +107,72 @@ TEST_CASE("3d points") {
 
     auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
 
-    REQUIRE(R.isApprox(ret_R));
-    REQUIRE(t.isApprox(ret_t));
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
     REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
 }
 
-TEST_CASE("calc_scale false") {
+TEST_CASE("3d rank deficiency") {
     int dim = 3;
-    Eigen::MatrixXd src = random_points(100, dim);
+    int num_pts = 3;
+    Eigen::MatrixXd src(num_pts, dim);
+    src << 0, 0, 0, 1, 1, 1, 2, 2, 2;
+    REQUIRE_THROWS_AS(rigid_transform(src, src), RankDeficiencyError);
+}
+
+TEST_CASE("3d reflection") {
+    Eigen::Matrix3d R;
+    Eigen::Vector3d t;
+    Eigen::MatrixXd src(3, 3);
+
+    R << 0.66962123, 0.22398235, 0.7081238,
+                0.25805249, 0.8238756, -0.50461659,
+                -0.69643113, 0.52063509, 0.49388539;
+    t << -1, 2, -3;
+    double scale = 2.34;
+
+    src << 1, 0, 0, -1, 0, 0, 1, 1, 0;
+
+    Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
+
+    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
+
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE(t.isApprox(ret_t, TOL));
+    REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
+}
+
+TEST_CASE("calc scale false") {
+    int dim = 3;
+    int num_pts = 100;
+
+    Eigen::MatrixXd src = random_points(num_pts, dim);
     Eigen::MatrixXd R = random_rotation(dim);
     Eigen::VectorXd t = random_translation(dim);
-    double scale = 10.0;
+    double scale = random_scale();
 
     Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
 
     auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, false);
 
-    REQUIRE(R.isApprox(ret_R));
-    REQUIRE_THAT(ret_scale, Catch::Matchers::WithinAbs(1.0, TOL));
+    REQUIRE(R.isApprox(ret_R, TOL));
+    REQUIRE_THAT(1.0, Catch::Matchers::WithinAbs(ret_scale, TOL));
 }
 
 TEST_CASE("invalid point dim") {
     int dim = 4;
-    Eigen::MatrixXd src = random_points(100, dim);
-    REQUIRE_THROWS(rigid_transform(src, src));
+    int num_pts = 100;
+
+    Eigen::MatrixXd src = random_points(num_pts, dim);
+
+    REQUIRE_THROWS_AS(rigid_transform(src, src), InvalidPointDimError);
 }
 
-TEST_CASE("mismatch in matrix size") {
-    Eigen::MatrixXd src = random_points(100, 2);
-    Eigen::MatrixXd dst = random_points(100, 3);
-    REQUIRE_THROWS(rigid_transform(src, dst));
-}
+TEST_CASE("mismatch size") {
+    int num_pts = 100;
 
-TEST_CASE("wrong order") {
-    Eigen::MatrixXd src = random_points(3, 100);
-    REQUIRE_THROWS(rigid_transform(src, src));
-}
+    Eigen::MatrixXd src = random_points(num_pts, 2);
+    Eigen::MatrixXd dst= random_points(num_pts, 3);
 
-TEST_CASE("not enough points") {
-    int dim = 3;
-    Eigen::MatrixXd src = random_points(2, dim);
-    REQUIRE_THROWS(rigid_transform(src, src));
-}
-
-TEST_CASE("2d all identical points") {
-    int dim = 2;
-    Eigen::MatrixXd src(3, dim);
-    src.setOnes();
-
-    REQUIRE_THROWS(rigid_transform(src, src));
-}
-
-TEST_CASE("3d collinear points") {
-    int dim = 3;
-    Eigen::MatrixXd src(4, dim);
-    src << 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3;
-
-    REQUIRE_THROWS(rigid_transform(src, src));
-}
-
-TEST_CASE("3d points on a 2d plane") {
-    int dim = 3;
-    Eigen::MatrixXd src = random_points(100, dim);
-    Eigen::MatrixXd R = random_rotation(dim);
-    Eigen::VectorXd t = random_translation(dim);
-    double scale = random_scale();
-
-    src.col(2) *= 0.0;
-    Eigen::MatrixXd dst = apply_transform(src, R, t, scale);
-
-    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, true);
-    REQUIRE(R.isApprox(ret_R));
-    REQUIRE(t.isApprox(ret_t));
-    REQUIRE_THAT(scale, Catch::Matchers::WithinAbs(ret_scale, TOL));
-}
-
-TEST_CASE("reflection") {
-    int dim = 2;
-    Eigen::MatrixXd src(3, dim);
-    Eigen::MatrixXd dst(3, dim);
-
-    src << 0.04997603, 0.92769423, 0.64045334, 0.5110098, 0.80452329, 0.19618526;
-
-    dst << 0.44224556, 0.61291874, 0.4559217, 0.17549108, 0.57923716, 0.23585888;
-
-    auto [ret_R, ret_t, ret_scale] = rigid_transform(src, dst, false);
-
-    REQUIRE_THAT(ret_R.determinant(), Catch::Matchers::WithinAbs(1.0, TOL));
+    REQUIRE_THROWS_AS(rigid_transform(src, dst), SrcDstSizeMismatchError);
 }
