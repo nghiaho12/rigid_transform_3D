@@ -32,10 +32,8 @@ def random_translation(dim):
 
 
 def random_scale():
-    while True:
-        s = np.random.rand(1) * 10
-        if abs(s) > 0.1:
-            return s.item()
+    s = 0.1 + abs(np.random.rand(1) * 10)
+    return s.item()
 
 
 if __name__ == "__main__":
