@@ -3,6 +3,23 @@
 import numpy as np
 
 
+# Custom exceptions to make it easier to distinguish in the unit tests
+class SrcDstSizeMismatchError(Exception):
+    pass
+
+
+class InvalidPointDimError(Exception):
+    pass
+
+
+class NotEnoughPointsError(Exception):
+    pass
+
+
+class RankDeficiencyError(Exception):
+    pass
+
+
 def rigid_transform(src_pts, dst_pts, calc_scale=False):
     """Calculates the optimal rigid transform from src_pts to dst_pts.
 
@@ -29,13 +46,16 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
 
     dim = src_pts.shape[1]
 
-    assert dim == 2 or dim == 3, "dim must be 2 or 3"
-    assert (
-        src_pts.shape == dst_pts.shape
-    ), f"src and dst points aren't the same shape {src_pts.shape=} != {dst_pts.shape=}"
-    assert src_pts.shape[1] == dim, f"Expect Nx{dim} matrix of points"
+    if src_pts.shape != dst_pts.shape:
+        raise SrcDstSizeMismatchError(
+            f"src and dst points aren't the same matrix size {src_pts.shape=} != {dst_pts.shape=}"
+        )
 
-    assert src_pts.shape[0] >= dim, f"Not enough points, expect >= {dim}"
+    if not (dim == 2 or dim == 3):
+        raise InvalidPointDimError(f"Points must be 2D or 3D, src_pts.shape[1] = {dim}")
+
+    if src_pts.shape[0] < dim:
+        raise NotEnoughPointsError(f"Not enough points, expect >= {dim} points")
 
     # find mean/centroid
     centroid_src = np.mean(src_pts, axis=0)
@@ -53,11 +73,16 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
     # https://en.wikipedia.org/wiki/Cross-covariance_matrix
     H = src_pts.T @ dst_pts
 
-    assert H.shape[0] == dim and H.shape[1] == dim, f"H matrix is not {dim}x{dim}"
-
-    # sanity check
     rank = np.linalg.matrix_rank(H)
-    assert rank == dim, f"Insufficent matrix rank, expect {dim} but got {rank}"
+
+    if dim == 2 and rank == 0:
+        raise RankDeficiencyError(
+            f"Insufficent matrix rank. For 2D points expect rank >= 1 but got {rank}"
+        )
+    elif dim == 3 and rank <= 1:
+        raise RankDeficiencyError(
+            f"Insufficent matrix rank. For 3D points expect rank >= 2 but got {rank}"
+        )
 
     # find rotation
     U, _, Vt = np.linalg.svd(H)
@@ -65,10 +90,11 @@ def rigid_transform(src_pts, dst_pts, calc_scale=False):
 
     # special reflection case
     # https://en.wikipedia.org/wiki/Kabsch_algorithm
-    if np.linalg.det(R) < 0:
-        print("det(R) < 1, reflection detected!, correcting for it ...")
+    det = np.linalg.det(R)
+    if det < 0:
+        print(f"det(R) = {det}, reflection detected!, correcting for it ...")
         S = np.eye(dim)
-        S[-1] = -1
+        S[-1, -1] = -1
         R = Vt.T @ S @ U.T
 
     if calc_scale:

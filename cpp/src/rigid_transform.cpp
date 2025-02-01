@@ -43,9 +43,9 @@ RigidTransformResult rigid_transform(const Eigen::MatrixXd &src_pts, const Eigen
 
     if (dim == 3 && svd.rank() < 2) {
         // For 3D points the rank can be 2, all points lie on a plane
-        throw std::runtime_error(std::format("Insufficent matrix rank, expect >= 2 but got {}", svd.rank()));
+        throw std::runtime_error(std::format("Insufficent matrix H rank, expect >= 2 but got {}, are the points collinear?", svd.rank()));
     } else if (dim == 2 && svd.rank() < 2) {
-        throw std::runtime_error(std::format("Insufficent matrix rank, expect 2 but got {}", svd.rank()));
+        throw std::runtime_error(std::format("Insufficent matrix H rank, expect 2 but got {}", svd.rank()));
     }
 
     Eigen::MatrixXd R = svd.matrixV() * svd.matrixU().transpose();
