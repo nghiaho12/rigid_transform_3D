@@ -20,9 +20,9 @@ function [R, t, scale] = rigid_transform(src_pts, dst_pts, calc_scale=false)
     % R: rotation matrix
     % t: translation column vector
     % scale: scalar, scale=1.0 if calc_scale=False
-    narginchk(2, 3)
+    narginchk(2, 3);
 
-    dim = size(src_pts, 2)
+    dim = size(src_pts, 2);
 
     assert(all(size(src_pts) == size(dst_pts)), sprintf("src and dst points aren't the same matrix size %dx%d != %dx%d", size(src_pts, 1), size(src_pts, 2), size(dst_pts, 1), size(dst_pts, 2)))
 
@@ -57,16 +57,16 @@ function [R, t, scale] = rigid_transform(src_pts, dst_pts, calc_scale=false)
     % special reflection case
     % https://en.wikipedia.org/wiki/Kabsch_algorithm
     if det(R) < 0
-        printf("det(R) < 1, reflection detected!, correcting for it ...")
-        S = eye(dim)
+        printf("det(R) < 0, reflection detected!, correcting for it ...\n")
+        S = eye(dim);
         S(dim, dim)  = -1;
         R = V * S * U';
     end
 
     if calc_scale
-        scale = sqrt(mean(dst_pts.^2, "all") / mean(src_pts.^2, "all"))
+        scale = sqrt(mean(dst_pts.^2, "all") / mean(src_pts.^2, "all"));
     else
-        scale = 1.0
+        scale = 1.0;
     end
 
     t = -scale * R * centroid_src' + centroid_dst';

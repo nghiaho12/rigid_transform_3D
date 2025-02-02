@@ -34,7 +34,7 @@ function example()
         printf("Ground truth scale: %f\n", scale)
         printf("Recovered scale: %f\n", ret_scale)
         printf("")
-        printf("RMSE: %f\n", rmse)
+        printf("RMSE: %f", rmse)
 
         if rmse < 1e-6
             printf("Everything looks good!\n")
