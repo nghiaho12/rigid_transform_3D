@@ -1,12 +1,19 @@
 Implementation of the rigid 3D transform algorithm.
 
-Given two sets of 3D points and their correspondence, the algorithm will return a least square optimal rigid transform (also known as Euclidean transform) between the two sets.
-The transform solves for 3D rotation and 3D translation.
+Given two sets of points and their correspondences, the algorithm will find the optimal transform by solving a least squares problem.
 
-I added a flag to enable solving for scale as well. This will solve for the [similiarity transform](https://en.wikipedia.org/wiki/Similarity_(geometry). The scale is a single scalar.
+2D and 3D points are supported as well as rigid (rotation, translation) and similiarity (rotation, translation, scale) transforms.
 
 # Usage
-Go to the subfolder for the language you're interested and look at the test file for usage.
+Code for C++, Python, Matlab/Octave can be found in their respective folder.
+
+The function signature is
+```
+rigid_transform(src_pts, dst_pts, calc_scaling)
+```
+and returns rotation, translation, scale.
+
+src_pts and dst_pts are points stored as rows in a matrix (e.g. Nx2 or Nx3).
 
 # References
 - https://en.wikipedia.org/wiki/Kabsch_algorithm
