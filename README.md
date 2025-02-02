@@ -1,3 +1,6 @@
+![C++](https://github.com/nghiaho12/rigid_transform_3D/actions/workflows/c-cpp.yml/badge.svg)
+![Python](https://github.com/nghiaho12/rigid_transform_3D/actions/workflows/python-app.yml/badge.svg)
+
 Implementation of the rigid 3D transform algorithm.
 
 Given two sets of points and their correspondences, the algorithm will find the optimal transform by solving a least squares problem.
