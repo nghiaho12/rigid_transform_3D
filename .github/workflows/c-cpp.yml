@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Eigen3
+      run: sudo apt install -y libeigen3-dev
+    - name: Catch2
+      run: sudo apt install -y catch2
+    - name: make
+      run: cd cpp && mkdir build && cd build && cmake .. && make
+    - name: tests
+      run: cd cpp/build && ./unit_tests
