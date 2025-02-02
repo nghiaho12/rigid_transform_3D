@@ -13,11 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
+    - name: Eigen3
+      run: sudo apt install -y libeigen3-dev
     - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+      run: cd cpp && mkdir build && cd build && cmake .. && make
+    - name: tests
+      run: cd cpp/build && ./unit_tests
