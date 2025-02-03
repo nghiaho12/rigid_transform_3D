@@ -1,0 +1,19 @@
+name: Matlab/Octave tests
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: install octave
+      run: sudo apt update && sudo apt install -y octave
+    - name: tests
+      run: cd matlab && octave unit_tests.m
