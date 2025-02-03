@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: install octave
-      run: sudo apt install -y octave
+      run: sudo apt update && apt install -y octave
     - name: tests
       run: cd matlab && octave unit_tests.m
