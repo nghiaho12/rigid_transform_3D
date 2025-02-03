@@ -1,5 +1,3 @@
-% This script is written for Octave, not Matlab.
-
 function unit_tests()
     test_2d_not_enough_points();
     test_2d_min_points();
