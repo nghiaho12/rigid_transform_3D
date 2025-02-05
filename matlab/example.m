@@ -45,7 +45,7 @@ function example()
 end
 
 function pts = random_points(num, dim)
-    pts = rand(num, dim);
+    pts = rand(num, dim)*2 - 1; % [-1, 1]
 end
 
 function R = random_rotation(dim)
